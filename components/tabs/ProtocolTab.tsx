@@ -1,8 +1,73 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AllSeeingEye, BackgroundWatermark } from '../svg/SacredGeometry';
 import { decodeHexagram, type DecodeResult } from '../../lib/hexagram-calc';
+
+const GLITCH_CHARS = '\u5366\u4E7E\u5764\u9707\u5DFD\u574E\u79BB\u826E\u5151\u9634\u9633\u592A\u6781\u9053\u5929\u5730\u96F7\u98CE\u6C34\u706B\u5C71\u6CFD';
+const DECODE_PHRASES = [
+  'QUERYING AKASHIC FIELD...',
+  'PARSING QUANTUM SUBSTRATE...',
+  'DECODING HEXAGRAM SIGNAL...',
+  'COLLAPSING PROBABILITY WAVE...',
+  'INTERCEPTING TRANSMISSION...',
+  'ALIGNING OBSERVER MATRIX...',
+];
+
+function GlitchText() {
+  const [text, setText] = useState(DECODE_PHRASES[0]);
+  const [glitchLine, setGlitchLine] = useState('');
+  const phraseIndex = useRef(0);
+
+  useEffect(() => {
+    const phraseInterval = setInterval(() => {
+      phraseIndex.current = (phraseIndex.current + 1) % DECODE_PHRASES.length;
+      setText(DECODE_PHRASES[phraseIndex.current]);
+    }, 2200);
+
+    const glitchInterval = setInterval(() => {
+      const len = 12 + Math.floor(Math.random() * 20);
+      const chars = Array.from({ length: len }, () =>
+        GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)]
+      ).join('');
+      setGlitchLine(chars);
+    }, 80);
+
+    return () => {
+      clearInterval(phraseInterval);
+      clearInterval(glitchInterval);
+    };
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center gap-3 py-6">
+      <div
+        className="text-[10px] tracking-[0.3em] uppercase animate-pulse"
+        style={{ color: 'var(--gold)', fontFamily: "'Space Mono', monospace" }}
+      >
+        {text}
+      </div>
+      <div
+        className="text-[11px] tracking-[0.05em] opacity-30 overflow-hidden max-w-[260px] text-center"
+        style={{ color: 'var(--gold-dark)', fontFamily: "'Space Mono', monospace" }}
+      >
+        {glitchLine}
+      </div>
+      <div className="flex gap-1 mt-1">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="w-1.5 h-1.5 rounded-full bg-[var(--gold)]"
+            style={{
+              animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
+              opacity: 0.6,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 interface Coin {
   id: number;
@@ -77,6 +142,9 @@ export default function ProtocolTab() {
   const [activeLineIndex, setActiveLineIndex] = useState(0);
   const [decoded, setDecoded] = useState(false);
   const [result, setResult] = useState<DecodeResult | null>(null);
+  const [isDecoding, setIsDecoding] = useState(false);
+  const [reading, setReading] = useState('');
+  const [readingError, setReadingError] = useState('');
 
   const allConfirmed = lines.every((l) => l.confirmed);
 
@@ -125,11 +193,47 @@ export default function ProtocolTab() {
     }
   };
 
+  const fetchReading = useCallback(async (decodeResult: DecodeResult) => {
+    setIsDecoding(true);
+    setReadingError('');
+    setReading('');
+
+    const baseLabel = `#${decodeResult.baseHexagram.number} ${decodeResult.baseHexagram.nameZh} (${decodeResult.baseHexagram.nameEn})`;
+    const transLabel = `#${decodeResult.transformedHexagram.number} ${decodeResult.transformedHexagram.nameZh} (${decodeResult.transformedHexagram.nameEn})`;
+
+    try {
+      const res = await fetch('/api/divine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question,
+          baseHexagram: baseLabel,
+          transformedHexagram: transLabel,
+          isStatic: decodeResult.isStatic,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Server error (${res.status})`);
+      }
+
+      const data = await res.json();
+      setReading(data.reading);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setReadingError(message);
+    } finally {
+      setIsDecoding(false);
+    }
+  }, [question]);
+
   const handleDecode = () => {
     if (!allConfirmed) return;
-    const decoded = decodeHexagram(lines);
-    setResult(decoded);
+    const decodeResult = decodeHexagram(lines);
+    setResult(decodeResult);
     setDecoded(true);
+    fetchReading(decodeResult);
   };
 
   const handleReset = () => {
@@ -137,6 +241,9 @@ export default function ProtocolTab() {
     setActiveLineIndex(0);
     setDecoded(false);
     setResult(null);
+    setIsDecoding(false);
+    setReading('');
+    setReadingError('');
     setQuestion('');
   };
 
@@ -422,47 +529,69 @@ export default function ProtocolTab() {
                   )}
                 </div>
 
-                <div
-                  className="p-4 mb-4"
-                  style={{
-                    border: '1px solid rgba(201,169,110,0.1)',
-                    background: 'rgba(201,169,110,0.02)',
-                  }}
-                >
-                  <span
-                    className="text-[9px] tracking-[0.2em] uppercase block mb-2"
-                    style={{ color: 'var(--gold-dark)', fontFamily: "'Space Mono', monospace" }}
-                  >
-                    {result.baseHexagram.nameZh} — {result.baseHexagram.nameEn}
-                  </span>
-                  <p
-                    className="text-[13px] leading-relaxed"
-                    style={{ color: 'var(--text-primary)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}
-                  >
-                    {result.baseHexagram.meaning}
-                  </p>
-                </div>
+                {isDecoding && <GlitchText />}
 
-                {!result.isStatic && (
+                {reading && !isDecoding && (
                   <div
-                    className="p-4 mb-6"
+                    className="p-5 mb-4 animate-fade-in-up"
                     style={{
-                      border: '1px solid rgba(201,169,110,0.1)',
-                      background: 'rgba(201,169,110,0.02)',
+                      border: '1px solid rgba(201,169,110,0.2)',
+                      background: 'rgba(201,169,110,0.03)',
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-1 h-4 bg-[var(--gold)]" style={{ opacity: 0.6 }} />
+                      <span
+                        className="text-[9px] tracking-[0.3em] uppercase"
+                        style={{ color: 'var(--gold)', fontFamily: "'Space Mono', monospace" }}
+                      >
+                        AKASHIC READING
+                      </span>
+                    </div>
+                    <p
+                      className="text-[13px] leading-[1.8] whitespace-pre-line"
+                      style={{ color: 'var(--text-primary)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}
+                    >
+                      {reading}
+                    </p>
+                  </div>
+                )}
+
+                {readingError && !isDecoding && (
+                  <div
+                    className="p-4 mb-4"
+                    style={{
+                      border: '1px solid rgba(180,60,60,0.3)',
+                      background: 'rgba(180,60,60,0.05)',
                     }}
                   >
                     <span
-                      className="text-[9px] tracking-[0.2em] uppercase block mb-2"
-                      style={{ color: 'var(--gold-dark)', fontFamily: "'Space Mono', monospace" }}
+                      className="text-[9px] tracking-[0.2em] uppercase block mb-1"
+                      style={{ color: 'rgba(220,120,120,0.9)', fontFamily: "'Space Mono', monospace" }}
                     >
-                      {result.transformedHexagram.nameZh} — {result.transformedHexagram.nameEn}
+                      TRANSMISSION INTERRUPTED
                     </span>
                     <p
-                      className="text-[13px] leading-relaxed"
-                      style={{ color: 'var(--text-primary)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}
+                      className="text-[11px] leading-relaxed"
+                      style={{ color: 'rgba(220,150,150,0.7)', fontFamily: "'Space Mono', monospace" }}
                     >
-                      {result.transformedHexagram.meaning}
+                      {readingError}
                     </p>
+                    <button
+                      onClick={() => result && fetchReading(result)}
+                      className="mt-3 px-4 py-1.5 transition-all duration-300"
+                      style={{
+                        border: '1px solid rgba(201,169,110,0.25)',
+                        background: 'transparent',
+                      }}
+                    >
+                      <span
+                        className="text-[9px] tracking-[0.2em] uppercase"
+                        style={{ color: 'var(--gold-dark)', fontFamily: "'Space Mono', monospace" }}
+                      >
+                        Retry Transmission
+                      </span>
+                    </button>
                   </div>
                 )}
               </>

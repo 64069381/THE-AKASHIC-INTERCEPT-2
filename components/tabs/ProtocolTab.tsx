@@ -213,9 +213,22 @@ export default function ProtocolTab() {
         }),
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || `Server error (${res.status})`);
+if (!res.ok) {
+        // 1. 先把服务器返回的东西当成纯文本强行扒下来
+        const rawErrorText = await res.text();
+        let exactErrorMessage = `HTTP ${res.status}: ${rawErrorText}`;
+        
+        // 2. 尝试看看它是不是 JSON，如果是，提取里面的 error 字段
+        try {
+          const parsed = JSON.parse(rawErrorText);
+          if (parsed.error) {
+            exactErrorMessage = typeof parsed.error === 'string' ? parsed.error : JSON.stringify(parsed.error);
+          }
+        } catch (e) {
+          // 如果不是 JSON，就保留刚才抓到的纯文本原话
+        }
+        
+        throw new Error(exactErrorMessage);
       }
 
       const data = await res.json();

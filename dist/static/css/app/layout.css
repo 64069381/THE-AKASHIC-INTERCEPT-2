@@ -938,6 +938,9 @@ video {
 .border-collapse {
   border-collapse: collapse;
 }
+.origin-top {
+  transform-origin: top;
+}
 .-translate-x-1\/2 {
   --tw-translate-x: -50%;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
@@ -1534,6 +1537,9 @@ video {
 .font-semibold {
   font-weight: 600;
 }
+.font-bold {
+  font-weight: 700;
+}
 .uppercase {
   text-transform: uppercase;
 }
@@ -1577,6 +1583,9 @@ video {
 .tracking-widest {
   letter-spacing: 0.1em;
 }
+.tracking-wider {
+  letter-spacing: 0.05em;
+}
 .text-accent-foreground {
   color: hsl(var(--accent-foreground));
 }
@@ -1612,6 +1621,9 @@ video {
 }
 .text-secondary-foreground {
   color: hsl(var(--secondary-foreground));
+}
+.text-\[rgba\(201\2c 169\2c 110\2c 0\.4\)\] {
+  color: rgba(201,169,110,0.4);
 }
 .underline-offset-4 {
   text-underline-offset: 4px;

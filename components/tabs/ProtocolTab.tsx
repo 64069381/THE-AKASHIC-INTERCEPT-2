@@ -5,7 +5,7 @@ import { AllSeeingEye, BackgroundWatermark } from '../svg/SacredGeometry';
 
 interface Coin {
   id: number;
-  result: 'yang' | 'yin' | null;
+  face: 'yang' | 'yin';
   flipping: boolean;
 }
 
@@ -15,48 +15,65 @@ interface LineState {
   confirmed: boolean;
 }
 
+function makeLines(): LineState[] {
+  return Array.from({ length: 6 }, (_, i) => ({
+    id: i,
+    coins: Array.from({ length: 3 }, (_, j) => ({ id: j, face: 'yang' as const, flipping: false })),
+    confirmed: false,
+  }));
+}
+
 export default function ProtocolTab() {
   const [question, setQuestion] = useState('');
-  const [lines, setLines] = useState<LineState[]>(
-    Array.from({ length: 6 }, (_, i) => ({
-      id: i,
-      coins: Array.from({ length: 3 }, (_, j) => ({ id: j, result: null, flipping: false })),
-      confirmed: false,
-    }))
-  );
+  const [lines, setLines] = useState<LineState[]>(makeLines);
   const [activeLineIndex, setActiveLineIndex] = useState(0);
   const [decoded, setDecoded] = useState(false);
   const [decodedText] = useState(
     'The pattern reveals a moment of transition. What appears as stillness is the gathering of force before movement. Trust the architecture of the unseen.'
   );
 
-  const allConfirmed = lines.every((line) => line.confirmed);
+  const allConfirmed = lines.every((l) => l.confirmed);
 
-  const handleCoinFlip = (lineIndex: number, coinIndex: number) => {
+  const handleCoinToggle = (lineIndex: number, coinIndex: number) => {
     if (lineIndex !== activeLineIndex || lines[lineIndex].confirmed) return;
 
-    const newLines = [...lines];
-    newLines[lineIndex].coins[coinIndex].flipping = true;
-    setLines(newLines);
+    const updated = lines.map((line, li) => {
+      if (li !== lineIndex) return line;
+      return {
+        ...line,
+        coins: line.coins.map((coin, ci) => {
+          if (ci !== coinIndex) return coin;
+          return { ...coin, flipping: true };
+        }),
+      };
+    });
+    setLines(updated);
 
     setTimeout(() => {
-      const result = Math.random() > 0.5 ? 'yang' : 'yin';
-      const updatedLines = [...lines];
-      updatedLines[lineIndex].coins[coinIndex].result = result;
-      updatedLines[lineIndex].coins[coinIndex].flipping = false;
-      setLines(updatedLines);
-    }, 600);
+      setLines((prev) =>
+        prev.map((line, li) => {
+          if (li !== lineIndex) return line;
+          return {
+            ...line,
+            coins: line.coins.map((coin, ci) => {
+              if (ci !== coinIndex) return coin;
+              return {
+                ...coin,
+                face: coin.face === 'yang' ? 'yin' : 'yang',
+                flipping: false,
+              };
+            }),
+          };
+        })
+      );
+    }, 350);
   };
 
   const handleConfirmLine = (lineIndex: number) => {
-    const line = lines[lineIndex];
-    const allFlipped = line.coins.every((coin) => coin.result !== null);
-    if (!allFlipped || line.confirmed) return;
-
-    const newLines = [...lines];
-    newLines[lineIndex].confirmed = true;
-    setLines(newLines);
-
+    if (lines[lineIndex].confirmed) return;
+    setLines((prev) =>
+      prev.map((line, li) => (li === lineIndex ? { ...line, confirmed: true } : line))
+    );
     if (lineIndex < 5) {
       setActiveLineIndex(lineIndex + 1);
     }
@@ -68,13 +85,7 @@ export default function ProtocolTab() {
   };
 
   const handleReset = () => {
-    setLines(
-      Array.from({ length: 6 }, (_, i) => ({
-        id: i,
-        coins: Array.from({ length: 3 }, (_, j) => ({ id: j, result: null, flipping: false })),
-        confirmed: false,
-      }))
-    );
+    setLines(makeLines());
     setActiveLineIndex(0);
     setDecoded(false);
     setQuestion('');
@@ -148,7 +159,6 @@ export default function ProtocolTab() {
 
           {lines.map((line, lineIndex) => {
             const isActive = lineIndex === activeLineIndex && !line.confirmed;
-            const allFlipped = line.coins.every((coin) => coin.result !== null);
 
             return (
               <div
@@ -185,69 +195,81 @@ export default function ProtocolTab() {
                   </div>
 
                   <div className="flex items-center justify-center gap-4 mb-4">
-                    {line.coins.map((coin, coinIndex) => (
-                      <button
-                        key={coin.id}
-                        onClick={() => handleCoinFlip(lineIndex, coinIndex)}
-                        disabled={!isActive || coin.result !== null || coin.flipping}
-                        className="relative"
-                        style={{
-                          perspective: '1000px',
-                          width: '52px',
-                          height: '52px',
-                        }}
-                      >
-                        <div
-                          className="relative w-full h-full transition-transform duration-600"
+                    {line.coins.map((coin, coinIndex) => {
+                      const isYang = coin.face === 'yang';
+                      const showYang = coin.flipping ? !isYang : isYang;
+
+                      return (
+                        <button
+                          key={coin.id}
+                          onClick={() => handleCoinToggle(lineIndex, coinIndex)}
+                          disabled={!isActive || coin.flipping}
+                          className="relative"
                           style={{
-                            transformStyle: 'preserve-3d',
-                            transform: coin.flipping ? 'rotateY(720deg)' : coin.result ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                            perspective: '1000px',
+                            width: '52px',
+                            height: '52px',
                           }}
                         >
                           <div
-                            className="absolute inset-0 rounded-full flex items-center justify-center"
+                            className="relative w-full h-full"
                             style={{
-                              backfaceVisibility: 'hidden',
-                              border: '1px solid rgba(201,169,110,0.3)',
-                              background: 'rgba(201,169,110,0.08)',
+                              transformStyle: 'preserve-3d',
+                              transform: coin.flipping ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                              transition: 'transform 0.35s ease-in-out',
                             }}
                           >
-                            <span className="text-[9px] text-[rgba(201,169,110,0.4)]">?</span>
-                          </div>
-
-                          <div
-                            className="absolute inset-0 rounded-full flex items-center justify-center"
-                            style={{
-                              backfaceVisibility: 'hidden',
-                              transform: 'rotateY(180deg)',
-                              border: '1px solid rgba(201,169,110,0.5)',
-                              background: coin.result === 'yang' ? 'rgba(201,169,110,0.2)' : 'rgba(10,10,10,0.6)',
-                            }}
-                          >
-                            <span
-                              className="text-[10px] font-bold tracking-wider"
+                            <div
+                              className="absolute inset-0 rounded-full flex items-center justify-center"
                               style={{
-                                color: coin.result === 'yang' ? 'var(--gold)' : 'var(--gold-dark)',
-                                fontFamily: "'Space Mono', monospace"
+                                backfaceVisibility: 'hidden',
+                                border: `1px solid ${showYang ? 'rgba(201,169,110,0.5)' : 'rgba(201,169,110,0.3)'}`,
+                                background: showYang ? 'rgba(201,169,110,0.2)' : 'rgba(10,10,10,0.6)',
                               }}
                             >
-                              {coin.result === 'yang' ? 'YANG' : 'YIN'}
-                            </span>
+                              <span
+                                className="text-[10px] font-bold tracking-wider"
+                                style={{
+                                  color: showYang ? 'var(--gold)' : 'var(--gold-dark)',
+                                  fontFamily: "'Space Mono', monospace",
+                                }}
+                              >
+                                {showYang ? 'YANG' : 'YIN'}
+                              </span>
+                            </div>
+
+                            <div
+                              className="absolute inset-0 rounded-full flex items-center justify-center"
+                              style={{
+                                backfaceVisibility: 'hidden',
+                                transform: 'rotateY(180deg)',
+                                border: `1px solid ${!showYang ? 'rgba(201,169,110,0.5)' : 'rgba(201,169,110,0.3)'}`,
+                                background: !showYang ? 'rgba(201,169,110,0.2)' : 'rgba(10,10,10,0.6)',
+                              }}
+                            >
+                              <span
+                                className="text-[10px] font-bold tracking-wider"
+                                style={{
+                                  color: !showYang ? 'var(--gold)' : 'var(--gold-dark)',
+                                  fontFamily: "'Space Mono', monospace",
+                                }}
+                              >
+                                {!showYang ? 'YANG' : 'YIN'}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {isActive && (
                     <button
                       onClick={() => handleConfirmLine(lineIndex)}
-                      disabled={!allFlipped}
                       className="w-full py-2 transition-all duration-300"
                       style={{
-                        border: `1px solid ${allFlipped ? 'rgba(201,169,110,0.4)' : 'rgba(201,169,110,0.1)'}`,
+                        border: '1px solid rgba(201,169,110,0.4)',
                         background: 'transparent',
-                        opacity: allFlipped ? 1 : 0.3,
                       }}
                     >
                       <span

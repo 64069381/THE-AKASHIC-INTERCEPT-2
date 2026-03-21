@@ -14,16 +14,9 @@ Constraints:
 - Use short paragraphs (1-3 sentences each)
 - Output only the reading text — no titles, headers, or labels`;
 
-interface DivineRequest {
-  question: string;
-  baseHexagram: string;
-  transformedHexagram: string;
-  isStatic: boolean;
-}
-
 export async function POST(request: Request) {
   try {
-    const body: DivineRequest = await request.json();
+    const body = await request.json();
     const { question, baseHexagram, transformedHexagram, isStatic } = body;
 
     if (!baseHexagram) {
@@ -32,10 +25,8 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
-      return NextResponse.json(
-        { error: 'OPENROUTER_API_KEY not configured' },
-        { status: 500 }
-      );
+      console.error('OPENROUTER_API_KEY is missing from env');
+      return NextResponse.json({ error: 'OPENROUTER_API_KEY not configured on server' }, { status: 500 });
     }
 
     const userMessage = [
@@ -46,48 +37,59 @@ export async function POST(request: Request) {
         : `Transformed Hexagram: ${transformedHexagram}`,
     ].join('\n');
 
+    const payload = {
+      model: 'google/gemini-2.0-flash-001',
+      messages: [
+        { role: 'user', content: SYSTEM_PROMPT + '\n\n---\n\n' + userMessage },
+      ],
+      temperature: 0.85,
+      max_tokens: 400,
+    };
+
+    console.log('[divine] Calling OpenRouter with model:', payload.model);
+
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://akashic-iching.app',
       },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: userMessage },
-        ],
-        temperature: 0.85,
-        max_tokens: 400,
-      }),
+      body: JSON.stringify(payload),
     });
 
+    const responseText = await response.text();
+    console.log('[divine] OpenRouter status:', response.status, 'body length:', responseText.length);
+
     if (!response.ok) {
-      const errText = await response.text();
-      console.error('OpenRouter error:', response.status, errText);
+      console.error('[divine] OpenRouter error body:', responseText);
       return NextResponse.json(
-        { error: 'LLM service unavailable' },
+        { error: `LLM returned ${response.status}: ${responseText.substring(0, 300)}` },
         { status: 502 }
       );
     }
 
-    const data = await response.json();
-    const reading = data?.choices?.[0]?.message?.content?.trim() ?? '';
+    let data: Record<string, unknown>;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseErr) {
+      console.error('[divine] JSON parse failed:', parseErr, 'raw:', responseText.substring(0, 300));
+      return NextResponse.json({ error: 'LLM returned non-JSON response' }, { status: 502 });
+    }
+
+    const choices = data.choices as Array<{ message?: { content?: string } }> | undefined;
+    const reading = choices?.[0]?.message?.content?.trim() ?? '';
 
     if (!reading) {
-      return NextResponse.json(
-        { error: 'Empty response from LLM' },
-        { status: 502 }
-      );
+      console.error('[divine] Empty reading. Full response:', JSON.stringify(data).substring(0, 500));
+      return NextResponse.json({ error: 'LLM returned empty reading' }, { status: 502 });
     }
 
     return NextResponse.json({ reading });
-  } catch (err) {
-    console.error('Divine API error:', err);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : '';
+    console.error('[divine] FATAL:', message, '\n', stack);
+    return NextResponse.json({ error: message || 'Unknown fatal error' }, { status: 500 });
   }
 }

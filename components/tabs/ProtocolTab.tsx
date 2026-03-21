@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { AllSeeingEye, BackgroundWatermark } from '../svg/SacredGeometry';
+import { decodeHexagram, type DecodeResult } from '../../lib/hexagram-calc';
 
 interface Coin {
   id: number;
@@ -23,14 +24,59 @@ function makeLines(): LineState[] {
   }));
 }
 
+function HexagramGlyph({ keyStr }: { keyStr: string }) {
+  const linesFromTop = keyStr.split('').reverse();
+  return (
+    <div className="flex flex-col items-center gap-[3px]">
+      {linesFromTop.map((bit, i) => (
+        <div key={i} className="flex items-center gap-[3px]">
+          {bit === '1' ? (
+            <div className="w-[28px] h-[3px] bg-[var(--gold)]" />
+          ) : (
+            <>
+              <div className="w-[11px] h-[3px] bg-[var(--gold-dark)]" />
+              <div className="w-[4px]" />
+              <div className="w-[11px] h-[3px] bg-[var(--gold-dark)]" />
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HexagramDisplay({ label, keyStr, info }: { label: string; keyStr: string; info: { number: number; nameZh: string; namePinyin: string } }) {
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <span
+        className="text-[8px] tracking-[0.2em] uppercase"
+        style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
+      >
+        {label}
+      </span>
+      <HexagramGlyph keyStr={keyStr} />
+      <span
+        className="text-[16px]"
+        style={{ color: 'var(--gold-light)', fontFamily: "'Cinzel', serif" }}
+      >
+        {info.nameZh}
+      </span>
+      <span
+        className="text-[9px] tracking-[0.15em]"
+        style={{ color: 'var(--text-secondary)', fontFamily: "'Space Mono', monospace" }}
+      >
+        #{info.number} {info.namePinyin}
+      </span>
+    </div>
+  );
+}
+
 export default function ProtocolTab() {
   const [question, setQuestion] = useState('');
   const [lines, setLines] = useState<LineState[]>(makeLines);
   const [activeLineIndex, setActiveLineIndex] = useState(0);
   const [decoded, setDecoded] = useState(false);
-  const [decodedText] = useState(
-    'The pattern reveals a moment of transition. What appears as stillness is the gathering of force before movement. Trust the architecture of the unseen.'
-  );
+  const [result, setResult] = useState<DecodeResult | null>(null);
 
   const allConfirmed = lines.every((l) => l.confirmed);
 
@@ -81,6 +127,8 @@ export default function ProtocolTab() {
 
   const handleDecode = () => {
     if (!allConfirmed) return;
+    const decoded = decodeHexagram(lines);
+    setResult(decoded);
     setDecoded(true);
   };
 
@@ -88,6 +136,7 @@ export default function ProtocolTab() {
     setLines(makeLines());
     setActiveLineIndex(0);
     setDecoded(false);
+    setResult(null);
     setQuestion('');
   };
 
@@ -312,29 +361,112 @@ export default function ProtocolTab() {
           )
         ) : (
           <div className="animate-fade-in-up">
-            <div
-              className="p-5 mb-6"
-              style={{
-                border: '1px solid rgba(201,169,110,0.15)',
-                background: 'rgba(201,169,110,0.02)',
-              }}
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-1.5 h-1.5 rotate-45 bg-[rgba(201,169,110,0.4)]" />
-                <span
-                  className="text-[10px] tracking-[0.3em] uppercase"
-                  style={{ color: 'var(--gold-dark)', fontFamily: "'Space Mono', monospace" }}
+            {result && (
+              <>
+                <div
+                  className="p-5 mb-4"
+                  style={{
+                    border: '1px solid rgba(201,169,110,0.15)',
+                    background: 'rgba(201,169,110,0.02)',
+                  }}
                 >
-                  TRANSMISSION DECODED
-                </span>
-              </div>
-              <p
-                className="text-[14px] leading-relaxed"
-                style={{ color: 'var(--text-primary)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}
-              >
-                {decodedText}
-              </p>
-            </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-1.5 h-1.5 rotate-45 bg-[rgba(201,169,110,0.4)]" />
+                    <span
+                      className="text-[10px] tracking-[0.3em] uppercase"
+                      style={{ color: 'var(--gold-dark)', fontFamily: "'Space Mono', monospace" }}
+                    >
+                      TRANSMISSION DECODED
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-center gap-6 mb-4">
+                    <HexagramDisplay label="Original" keyStr={result.baseKey} info={result.baseHexagram} />
+                    {!result.isStatic && (
+                      <>
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="w-6 h-px bg-[rgba(201,169,110,0.3)]" />
+                          <span
+                            className="text-[8px] tracking-[0.2em] uppercase"
+                            style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
+                          >
+                            TRANSFORMS
+                          </span>
+                          <div className="w-6 h-px bg-[rgba(201,169,110,0.3)]" />
+                        </div>
+                        <HexagramDisplay label="Transformed" keyStr={result.transformedKey} info={result.transformedHexagram} />
+                      </>
+                    )}
+                  </div>
+
+                  {result.movingLines.length > 0 && (
+                    <div className="mb-3 text-center">
+                      <span
+                        className="text-[9px] tracking-[0.2em] uppercase"
+                        style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
+                      >
+                        Moving Lines: {result.movingLines.map((l) => `Line ${l}`).join(', ')}
+                      </span>
+                    </div>
+                  )}
+
+                  {result.isStatic && (
+                    <div className="mb-3 text-center">
+                      <span
+                        className="text-[9px] tracking-[0.2em] uppercase"
+                        style={{ color: 'var(--gold-dark)', fontFamily: "'Space Mono', monospace" }}
+                      >
+                        Static Hexagram — No Moving Lines
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div
+                  className="p-4 mb-4"
+                  style={{
+                    border: '1px solid rgba(201,169,110,0.1)',
+                    background: 'rgba(201,169,110,0.02)',
+                  }}
+                >
+                  <span
+                    className="text-[9px] tracking-[0.2em] uppercase block mb-2"
+                    style={{ color: 'var(--gold-dark)', fontFamily: "'Space Mono', monospace" }}
+                  >
+                    {result.baseHexagram.nameZh} — {result.baseHexagram.nameEn}
+                  </span>
+                  <p
+                    className="text-[13px] leading-relaxed"
+                    style={{ color: 'var(--text-primary)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}
+                  >
+                    {result.baseHexagram.meaning}
+                  </p>
+                </div>
+
+                {!result.isStatic && (
+                  <div
+                    className="p-4 mb-6"
+                    style={{
+                      border: '1px solid rgba(201,169,110,0.1)',
+                      background: 'rgba(201,169,110,0.02)',
+                    }}
+                  >
+                    <span
+                      className="text-[9px] tracking-[0.2em] uppercase block mb-2"
+                      style={{ color: 'var(--gold-dark)', fontFamily: "'Space Mono', monospace" }}
+                    >
+                      {result.transformedHexagram.nameZh} — {result.transformedHexagram.nameEn}
+                    </span>
+                    <p
+                      className="text-[13px] leading-relaxed"
+                      style={{ color: 'var(--text-primary)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 300 }}
+                    >
+                      {result.transformedHexagram.meaning}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
 
             <button
               onClick={handleReset}

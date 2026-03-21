@@ -146,7 +146,7 @@ export default function ProtocolTab() {
           />
         </div>
 
-        <div className="space-y-3 mb-8">
+        <div className="flex flex-col-reverse gap-3 mb-8">
           <div className="flex items-center gap-2 mb-4">
             <span
               className="text-[10px] tracking-[0.3em] uppercase"

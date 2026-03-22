@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { HexagramSigil, BackgroundWatermark } from '../svg/SacredGeometry';
 import supabase from '@/lib/supabase';
+import { calculateAccurateUTC } from '@/lib/time-engine';
 
 export default function OriginTab() {
   const [formData, setFormData] = useState({
@@ -113,6 +114,14 @@ export default function OriginTab() {
         return;
       }
       console.log("[DEBUG] Upsert successful!");
+      const lat = formData.latitude ? parseFloat(formData.latitude) : NaN;
+      const lon = formData.longitude ? parseFloat(formData.longitude) : NaN;
+      const timeResult = calculateAccurateUTC(formData.birthDate, formData.birthTime, lat, lon);
+      if (timeResult) {
+        console.log('[TIME ENGINE]:', timeResult);
+      } else {
+        console.warn('[TIME ENGINE]: Insufficient data for UTC calculation');
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
     } catch (error) {

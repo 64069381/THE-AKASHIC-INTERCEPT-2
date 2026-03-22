@@ -123,10 +123,10 @@ export default function OriginTab() {
       latitude: !isNaN(lat) ? lat : null,
       longitude: !isNaN(lon) ? lon : null,
       true_solar_time: timeResult?.utcISO ?? null,
-      bazi_year: baziResult ? JSON.stringify(baziResult.year) : null,
-      bazi_month: baziResult ? JSON.stringify(baziResult.month) : null,
-      bazi_day: baziResult ? JSON.stringify(baziResult.day) : null,
-      bazi_hour: baziResult ? JSON.stringify(baziResult.hour) : null,
+      bazi_year: baziResult?.year.ganZhi ?? null,
+      bazi_month: baziResult?.month.ganZhi ?? null,
+      bazi_day: baziResult?.day.ganZhi ?? null,
+      bazi_hour: baziResult?.hour.ganZhi ?? null,
       updated_at: new Date().toISOString(),
     };
 

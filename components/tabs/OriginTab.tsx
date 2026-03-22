@@ -14,10 +14,14 @@ export default function OriginTab() {
   });
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [matchedLocation, setMatchedLocation] = useState('');
 
   const handleGeocode = async () => {
     const place = formData.birthPlace.trim();
-    if (!place) return;
+    if (!place) {
+      setMatchedLocation('');
+      return;
+    }
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}&limit=1`
@@ -29,9 +33,14 @@ export default function OriginTab() {
           latitude: parseFloat(results[0].lat).toFixed(4),
           longitude: parseFloat(results[0].lon).toFixed(4),
         }));
+        setMatchedLocation(results[0].display_name || '');
+      } else {
+        setFormData((prev) => ({ ...prev, latitude: '', longitude: '' }));
+        setMatchedLocation('LOCATION NOT FOUND');
       }
     } catch {
-      // silent fail for geocoding
+      setFormData((prev) => ({ ...prev, latitude: '', longitude: '' }));
+      setMatchedLocation('LOCATION NOT FOUND');
     }
   };
 
@@ -88,22 +97,27 @@ export default function OriginTab() {
   const performUpsert = async (userId: string) => {
     const payload = {
       id: userId,
-      birth_date: formData.birthDate,
-      birth_time: formData.birthTime,
-      birth_place: formData.birthPlace,
-      latitude: formData.latitude ? parseFloat(formData.latitude) : 0,
-      longitude: formData.longitude ? parseFloat(formData.longitude) : 0,
+      birth_date: formData.birthDate || null,
+      birth_time: formData.birthTime || null,
+      city: formData.birthPlace || null,
+      country: null as string | null,
+      latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+      longitude: formData.longitude ? parseFloat(formData.longitude) : null,
       updated_at: new Date().toISOString(),
     };
     console.log("[DEBUG] Upserting payload:", payload);
-    const { error } = await supabase.from('users_origin').upsert(payload);
-    if (error) {
-      console.error("[DEBUG] Supabase upsert error:", error);
-      return;
+    try {
+      const { error } = await supabase.from('users_origin').upsert(payload);
+      if (error) {
+        console.error("[DEBUG] Supabase upsert error:", error);
+        return;
+      }
+      console.log("[DEBUG] Upsert successful!");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
+    } catch (error) {
+      console.error("[DEBUG] Supabase write failed:", error);
     }
-    console.log("[DEBUG] Upsert successful!");
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
   };
 
   return (
@@ -194,9 +208,20 @@ export default function OriginTab() {
             value={formData.birthPlace}
             onChange={(e) => setFormData({ ...formData, birthPlace: e.target.value })}
             onBlur={handleGeocode}
-            placeholder="City, Country"
+            placeholder="City, State/Province, Country"
             className="primordial-input"
           />
+          <p className="text-[9px] mt-1 opacity-40" style={{ color: 'var(--text-muted)' }}>
+            e.g., Chengdu, Sichuan, China OR Seattle, WA, USA
+          </p>
+          {matchedLocation && (
+            <p
+              className="text-[9px] mt-1.5 tracking-[0.1em] uppercase"
+              style={{ color: matchedLocation === 'LOCATION NOT FOUND' ? 'rgba(220,80,80,0.7)' : 'var(--gold)' }}
+            >
+              {matchedLocation === 'LOCATION NOT FOUND' ? matchedLocation : `MATCHED: ${matchedLocation}`}
+            </p>
+          )}
         </div>
 
         {/* Coordinates */}

@@ -1660,6 +1660,9 @@ video {
 .tracking-\[0\.12em\] {
   letter-spacing: 0.12em;
 }
+.tracking-wide {
+  letter-spacing: 0.025em;
+}
 .text-accent-foreground {
   color: hsl(var(--accent-foreground));
 }

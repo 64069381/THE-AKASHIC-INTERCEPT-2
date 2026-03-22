@@ -3,11 +3,20 @@
 import React from 'react';
 
 const mockSoulData = {
-  avatar: { title: 'THE WINTER FLAME', subtitle: 'Furnace Fire' },
+  avatar: { title: 'THE WINTER FLAME', subtitle: 'FURNACE FIRE' },
   elements: { metal: 20, wood: 60, water: 10, fire: 90, earth: 30 },
-  coreDrive: 'PIONEER',
-  interface: 'STANDALONE',
-  resonance: { sync: 'Neon Cyan', collision: 'Earth Tones' },
+  permission: {
+    name: 'PIONEER',
+    desc: 'High-level authorization for system destruction and reconstruction. Optimized for establishing new order in chaos. Not recommended for highly repetitive cyclical tasks.',
+  },
+  interface: {
+    name: 'STANDALONE',
+    desc: 'Energy exhibits high-intensity internal circulation. Emotional ports are heavily encrypted against external signal hijacking. Displays absolute rationality in close relations.',
+  },
+  resonance: {
+    sync: ['Neon Cyan', 'Obsidian Black', 'Titanium'],
+    collision: ['Earth Tones', 'Dull Yellow'],
+  },
 };
 
 const AXES = ['fire', 'earth', 'metal', 'water', 'wood'] as const;
@@ -312,38 +321,86 @@ export default function DashboardView() {
           <div className="flex-1 h-px" style={{ background: 'rgba(201,169,110,0.08)' }} />
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-6">
           <ProtocolCard label="SYS.PERMISSION">
             <span
-              className="text-[11px] tracking-[0.08em] leading-snug"
-              style={{ color: 'var(--gold)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 500 }}
+              className="block text-[13px] tracking-[0.1em] uppercase mb-1.5"
+              style={{ color: 'var(--gold)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 600 }}
             >
-              {mockSoulData.coreDrive}
+              {mockSoulData.permission.name}
+            </span>
+            <span
+              className="block text-[10px] leading-relaxed tracking-wide"
+              style={{ color: 'rgba(255,255,255,0.45)', fontFamily: "'Space Mono', monospace" }}
+            >
+              {mockSoulData.permission.desc}
             </span>
           </ProtocolCard>
 
           <ProtocolCard label="INTERFACE">
             <span
-              className="text-[11px] tracking-[0.08em] leading-snug"
-              style={{ color: 'var(--gold)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 500 }}
+              className="block text-[13px] tracking-[0.1em] uppercase mb-1.5"
+              style={{ color: 'var(--gold)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 600 }}
             >
-              {mockSoulData.interface}
+              {mockSoulData.interface.name}
+            </span>
+            <span
+              className="block text-[10px] leading-relaxed tracking-wide"
+              style={{ color: 'rgba(255,255,255,0.45)', fontFamily: "'Space Mono', monospace" }}
+            >
+              {mockSoulData.interface.desc}
             </span>
           </ProtocolCard>
 
           <ProtocolCard label="RESONANCE">
-            <span
-              className="block text-[10px] tracking-[0.05em] leading-relaxed"
-              style={{ color: 'var(--gold)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 500 }}
-            >
-              + {mockSoulData.resonance.sync}
-            </span>
-            <span
-              className="block text-[10px] tracking-[0.05em] leading-relaxed"
-              style={{ color: 'var(--text-secondary)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 500 }}
-            >
-              - {mockSoulData.resonance.collision}
-            </span>
+            <div className="mb-2">
+              <span
+                className="text-[9px] tracking-[0.15em] uppercase mr-2"
+                style={{ color: 'var(--gold)', fontFamily: "'Space Mono', monospace" }}
+              >
+                [+] SYNC:
+              </span>
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {mockSoulData.resonance.sync.map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-[9px] tracking-wide px-2 py-0.5"
+                    style={{
+                      color: 'var(--gold)',
+                      border: '1px solid rgba(201,169,110,0.25)',
+                      fontFamily: "'Rajdhani', sans-serif",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <span
+                className="text-[9px] tracking-[0.15em] uppercase mr-2"
+                style={{ color: 'rgba(180,100,80,0.7)', fontFamily: "'Space Mono', monospace" }}
+              >
+                [-] COLLISION:
+              </span>
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {mockSoulData.resonance.collision.map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-[9px] tracking-wide px-2 py-0.5"
+                    style={{
+                      color: 'rgba(180,100,80,0.7)',
+                      border: '1px solid rgba(180,100,80,0.2)',
+                      fontFamily: "'Rajdhani', sans-serif",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
           </ProtocolCard>
         </div>
       </div>

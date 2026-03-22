@@ -37,7 +37,7 @@ export async function fetchOracleReading(
       console.log(`[Oracle] Attempting node: ${node.name}`);
 
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 30000);
+      const timeout = setTimeout(() => controller.abort(), 90000);
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',

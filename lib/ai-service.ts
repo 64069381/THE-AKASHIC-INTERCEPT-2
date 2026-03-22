@@ -11,7 +11,7 @@ function getApiNodes(): ApiNode[] {
       name: 'OpenRouter',
       baseURL: 'https://openrouter.ai/api/v1',
       apiKey: process.env.OPENROUTER_API_KEY,
-      model: 'google/gemini-3.1-pro-preview',
+      model: 'google/gemini-2.5-flash-preview',
     },
     {
       name: 'DeepSeek',
@@ -39,12 +39,19 @@ export async function fetchOracleReading(
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 30000);
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${node.apiKey}`,
+      };
+
+      if (node.name === 'OpenRouter') {
+        headers['HTTP-Referer'] = 'https://bazi-matrix.bolt.new';
+        headers['X-Title'] = 'Cyber Bazi Oracle';
+      }
+
       const res = await fetch(`${node.baseURL}/chat/completions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${node.apiKey}`,
-        },
+        headers,
         body: JSON.stringify({
           model: node.model,
           messages: [

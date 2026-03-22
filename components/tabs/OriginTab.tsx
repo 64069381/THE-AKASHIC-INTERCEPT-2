@@ -26,16 +26,18 @@ export default function OriginTab() {
     }
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}&limit=1`
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(place)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}`
       );
-      const results = await res.json();
-      if (results && results.length > 0) {
+      const data = await res.json();
+      if (data.status === 'OK' && data.results.length > 0) {
+        const lat = data.results[0].geometry.location.lat;
+        const lon = data.results[0].geometry.location.lng;
         setFormData((prev) => ({
           ...prev,
-          latitude: parseFloat(results[0].lat).toFixed(4),
-          longitude: parseFloat(results[0].lon).toFixed(4),
+          latitude: parseFloat(String(lat)).toFixed(4),
+          longitude: parseFloat(String(lon)).toFixed(4),
         }));
-        setMatchedLocation(results[0].display_name || '');
+        setMatchedLocation(data.results[0].formatted_address || '');
       } else {
         setFormData((prev) => ({ ...prev, latitude: '', longitude: '' }));
         setMatchedLocation('LOCATION NOT FOUND');

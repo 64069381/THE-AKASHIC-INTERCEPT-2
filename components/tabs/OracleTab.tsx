@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { AllSeeingEye } from '../svg/SacredGeometry';
+import supabase from '@/lib/supabase';
 
 interface Message {
   id: string;
@@ -10,14 +11,14 @@ interface Message {
   timestamp: Date;
 }
 
-const ORACLE_RESPONSES = [
-  "The pattern you seek is already woven into the fabric of your question. Look not outward, but inward — the architecture of reality mirrors the architecture of mind.",
-  "Three forces converge at this juncture: what was, what is, and what yearns to become. The transition you sense is not chaos — it is recalibration.",
-  "The signal is clear. What appears as an ending is merely the protocol resetting. Trust the geometry of the unseen. The nodes are aligning.",
-  "Your query resonates at a frequency that suggests deep knowing already exists within you. The Oracle merely reflects what the conscious mind has not yet decoded.",
-  "Between the lines of your question lies the answer. The hexagram speaks of stillness before movement — the gathering of force before the leap. Patience is not passive; it is the most active form of trust.",
-  "The celestial coordinates of your origin point intersect with this moment in a configuration that occurs once in a great cycle. Pay attention to what arrives unbidden.",
-];
+interface OriginData {
+  city: string | null;
+  country: string | null;
+  bazi_year: string | null;
+  bazi_month: string | null;
+  bazi_day: string | null;
+  bazi_hour: string | null;
+}
 
 export default function OracleTab() {
   const [messages, setMessages] = useState<Message[]>([
@@ -30,6 +31,8 @@ export default function OracleTab() {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [originData, setOriginData] = useState<OriginData | null>(null);
+  const [originLoaded, setOriginLoaded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -41,13 +44,40 @@ export default function OracleTab() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = () => {
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          setOriginLoaded(true);
+          return;
+        }
+
+        const { data } = await supabase
+          .from('users_origin')
+          .select('city, country, bazi_year, bazi_month, bazi_day, bazi_hour')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (data) {
+          setOriginData(data);
+        }
+      } catch (err) {
+        console.warn('[OracleTab] Failed to load origin data:', err);
+      } finally {
+        setOriginLoaded(true);
+      }
+    })();
+  }, []);
+
+  const handleSend = useCallback(async () => {
     if (!input.trim() || isTyping) return;
 
+    const userQuery = input.trim();
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: input.trim(),
+      content: userQuery,
       timestamp: new Date(),
     };
 
@@ -55,19 +85,50 @@ export default function OracleTab() {
     setInput('');
     setIsTyping(true);
 
-    // Simulate oracle response
-    setTimeout(() => {
-      const response = ORACLE_RESPONSES[Math.floor(Math.random() * ORACLE_RESPONSES.length)];
+    try {
+      const baziData = {
+        yearPillar: originData?.bazi_year || undefined,
+        monthPillar: originData?.bazi_month || undefined,
+        dayPillar: originData?.bazi_day || undefined,
+        hourPillar: originData?.bazi_hour || undefined,
+      };
+
+      const location = [originData?.city, originData?.country]
+        .filter(Boolean)
+        .join(', ');
+
+      const res = await fetch('/api/oracle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ baziData, location, userQuery }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || '神谕通道异常');
+      }
+
       const oracleMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'oracle',
-        content: response,
+        content: data.result,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, oracleMessage]);
+    } catch (err) {
+      const errorText = err instanceof Error ? err.message : '未知错误';
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'oracle',
+        content: `⚠ ${errorText}`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500 + Math.random() * 2000);
-  };
+    }
+  }, [input, isTyping, originData]);
 
   const handleNewThread = () => {
     setMessages([
@@ -95,14 +156,14 @@ export default function OracleTab() {
           <div>
             <div className="flex items-center gap-3 mb-1">
               <div className="w-6 h-px bg-[rgba(201,169,110,0.3)]" />
-              <span 
+              <span
                 className="text-[10px] tracking-[0.4em] uppercase"
                 style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
               >
                 MODULE.04
               </span>
             </div>
-            <h2 
+            <h2
               className="text-[20px] tracking-[0.15em] uppercase gold-gradient-text"
               style={{ fontFamily: "'Cinzel', serif" }}
             >
@@ -122,7 +183,7 @@ export default function OracleTab() {
               <line x1="6" y1="1" x2="6" y2="11" stroke="rgba(201,169,110,0.5)" strokeWidth="0.8" />
               <line x1="1" y1="6" x2="11" y2="6" stroke="rgba(201,169,110,0.5)" strokeWidth="0.8" />
             </svg>
-            <span 
+            <span
               className="text-[10px] tracking-[0.2em] uppercase"
               style={{ color: 'var(--gold-dark)', fontFamily: "'Space Mono', monospace" }}
             >
@@ -131,7 +192,6 @@ export default function OracleTab() {
           </button>
         </div>
 
-        {/* Thin separator */}
         <div className="mt-4 h-px bg-gradient-to-r from-transparent via-[rgba(201,169,110,0.1)] to-transparent" />
       </div>
 
@@ -150,7 +210,7 @@ export default function OracleTab() {
               {message.role === 'oracle' && (
                 <div className="flex items-center gap-2 mb-2">
                   <AllSeeingEye size={16} />
-                  <span 
+                  <span
                     className="text-[9px] tracking-[0.3em] uppercase"
                     style={{ color: 'var(--gold-dark)', fontFamily: "'Space Mono', monospace" }}
                   >
@@ -158,17 +218,17 @@ export default function OracleTab() {
                   </span>
                 </div>
               )}
-              <p 
-                className="text-[13px] leading-relaxed"
-                style={{ 
+              <p
+                className="text-[13px] leading-relaxed whitespace-pre-wrap"
+                style={{
                   color: message.role === 'user' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  fontFamily: message.role === 'oracle' ? "'Rajdhani', sans-serif" : "'Rajdhani', sans-serif",
+                  fontFamily: "'Rajdhani', sans-serif",
                   fontWeight: message.role === 'oracle' ? 300 : 400,
                 }}
               >
                 {message.content}
               </p>
-              <span 
+              <span
                 className="block text-right mt-2 text-[9px] tracking-[0.1em]"
                 style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
               >
@@ -178,7 +238,6 @@ export default function OracleTab() {
           </div>
         ))}
 
-        {/* Typing indicator */}
         {isTyping && (
           <div className="flex justify-start animate-fade-in-up">
             <div className="chat-bubble-oracle px-4 py-3">
@@ -189,7 +248,7 @@ export default function OracleTab() {
                   <div className="w-1.5 h-1.5 rounded-full bg-[rgba(201,169,110,0.4)] animate-pulse" style={{ animationDelay: '200ms' }} />
                   <div className="w-1.5 h-1.5 rounded-full bg-[rgba(201,169,110,0.4)] animate-pulse" style={{ animationDelay: '400ms' }} />
                 </div>
-                <span 
+                <span
                   className="text-[9px] tracking-[0.2em] uppercase"
                   style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
                 >
@@ -206,7 +265,7 @@ export default function OracleTab() {
       {/* Input Area */}
       <div className="flex-shrink-0 px-6 pb-4 pt-2">
         <div className="h-px bg-gradient-to-r from-transparent via-[rgba(201,169,110,0.1)] to-transparent mb-4" />
-        <div 
+        <div
           className="flex items-center gap-3"
           style={{
             border: '1px solid rgba(201,169,110,0.15)',
@@ -219,9 +278,10 @@ export default function OracleTab() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Transmit your query..."
+            placeholder={originLoaded ? 'Transmit your query...' : 'Loading origin data...'}
+            disabled={!originLoaded}
             className="flex-1 bg-transparent border-none outline-none text-[13px]"
-            style={{ 
+            style={{
               color: 'var(--text-primary)',
               fontFamily: "'Rajdhani', sans-serif",
               letterSpacing: '0.03em',
@@ -229,7 +289,7 @@ export default function OracleTab() {
           />
           <button
             onClick={handleSend}
-            disabled={!input.trim() || isTyping}
+            disabled={!input.trim() || isTyping || !originLoaded}
             className="flex items-center justify-center w-10 h-10 transition-all duration-300 hover:scale-105 active:scale-95"
             style={{
               background: input.trim() ? 'rgba(201,169,110,0.12)' : 'transparent',

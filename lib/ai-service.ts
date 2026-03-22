@@ -10,8 +10,8 @@ function getApiNodes(): ApiNode[] {
     {
       name: 'OpenRouter',
       baseURL: 'https://openrouter.ai/api/v1',
-      apiKey: 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,
-      model: 'google/gemini-3.1-pro-preview',
+      apiKey: process.env.OPENROUTER_API_KEY,
+      model: 'google/gemini-2.5-flash-preview',
     },
     {
       name: 'DeepSeek',

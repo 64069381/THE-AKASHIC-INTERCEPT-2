@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { HexagramSigil, BackgroundWatermark } from '../svg/SacredGeometry';
+import supabase from '@/lib/supabase';
 
 export default function OriginTab() {
   const [formData, setFormData] = useState({
@@ -12,10 +13,50 @@ export default function OriginTab() {
     longitude: '',
   });
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleGeocode = async () => {
+    const place = formData.birthPlace.trim();
+    if (!place) return;
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}&limit=1`
+      );
+      const results = await res.json();
+      if (results && results.length > 0) {
+        setFormData((prev) => ({
+          ...prev,
+          latitude: parseFloat(results[0].lat).toFixed(4),
+          longitude: parseFloat(results[0].lon).toFixed(4),
+        }));
+      }
+    } catch {
+      // silent fail for geocoding
+    }
+  };
+
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from('users_origin').upsert({
+        id: user.id,
+        birth_date: formData.birthDate,
+        birth_time: formData.birthTime,
+        birth_place: formData.birthPlace,
+        latitude: formData.latitude ? parseFloat(formData.latitude) : 0,
+        longitude: formData.longitude ? parseFloat(formData.longitude) : 0,
+        updated_at: new Date().toISOString(),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
+    } catch {
+      // silent fail
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -105,6 +146,7 @@ export default function OriginTab() {
             type="text"
             value={formData.birthPlace}
             onChange={(e) => setFormData({ ...formData, birthPlace: e.target.value })}
+            onBlur={handleGeocode}
             placeholder="City, Country"
             className="primordial-input"
           />
@@ -172,7 +214,7 @@ export default function OriginTab() {
               fontFamily: "'Cinzel', serif"
             }}
           >
-            {saved ? '✦ Coordinates Locked ✦' : 'Save Coordinates'}
+            {saved ? '✦ COORDINATES LOCKED ✦' : 'Save Coordinates'}
           </span>
 
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer" />

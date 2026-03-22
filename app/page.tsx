@@ -1,14 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import BottomNav, { TabId } from '@/components/BottomNav';
 import HomeTab from '@/components/tabs/HomeTab';
 import OriginTab from '@/components/tabs/OriginTab';
 import ProtocolTab from '@/components/tabs/ProtocolTab';
 import OracleTab from '@/components/tabs/OracleTab';
+import supabase from '@/lib/supabase';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>('home');
+
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        await supabase.auth.signInAnonymously();
+      }
+    })();
+  }, []);
 
   const renderTab = () => {
     switch (activeTab) {

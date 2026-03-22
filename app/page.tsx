@@ -10,8 +10,10 @@ import supabase from '@/lib/supabase';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>('home');
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -19,6 +21,19 @@ export default function Home() {
       }
     })();
   }, []);
+
+  if (!isMounted) {
+    return (
+      <main
+        className="relative min-h-screen"
+        style={{
+          background: 'var(--obsidian)',
+          maxWidth: '480px',
+          margin: '0 auto',
+        }}
+      />
+    );
+  }
 
   return (
     <main

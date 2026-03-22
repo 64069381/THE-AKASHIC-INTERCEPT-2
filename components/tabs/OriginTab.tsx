@@ -36,27 +36,74 @@ export default function OriginTab() {
   };
 
   const handleSave = async () => {
-    if (saving) return;
+    console.log("[DEBUG] Button clicked, starting save logic...");
+    if (saving) {
+      console.warn("[DEBUG] Save blocked: already saving", { saving });
+      return;
+    }
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      await supabase.from('users_origin').upsert({
-        id: user.id,
-        birth_date: formData.birthDate,
-        birth_time: formData.birthTime,
-        birth_place: formData.birthPlace,
-        latitude: formData.latitude ? parseFloat(formData.latitude) : 0,
-        longitude: formData.longitude ? parseFloat(formData.longitude) : 0,
-        updated_at: new Date().toISOString(),
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 1500);
-    } catch {
-      // silent fail
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) {
+        console.warn("[DEBUG] Auth error, attempting anonymous sign-in...", authError);
+        const { error: signInError } = await supabase.auth.signInAnonymously();
+        if (signInError) {
+          console.error("[DEBUG] Anonymous sign-in failed:", signInError);
+          return;
+        }
+        const { data: { user: retryUser }, error: retryError } = await supabase.auth.getUser();
+        if (!retryUser || retryError) {
+          console.error("[DEBUG] Still no user after sign-in:", { retryUser, retryError });
+          return;
+        }
+        console.log("[DEBUG] Recovered user after sign-in:", retryUser.id);
+        await performUpsert(retryUser.id);
+        return;
+      }
+      if (!user) {
+        console.warn("[DEBUG] No user found, attempting anonymous sign-in...");
+        const { error: signInError } = await supabase.auth.signInAnonymously();
+        if (signInError) {
+          console.error("[DEBUG] Anonymous sign-in failed:", signInError);
+          return;
+        }
+        const { data: { user: newUser } } = await supabase.auth.getUser();
+        if (!newUser) {
+          console.error("[DEBUG] Still no user after sign-in");
+          return;
+        }
+        console.log("[DEBUG] Recovered user after sign-in:", newUser.id);
+        await performUpsert(newUser.id);
+        return;
+      }
+      console.log("[DEBUG] User found:", user.id);
+      await performUpsert(user.id);
+    } catch (error) {
+      console.error("[DEBUG] Supabase save failed:", error);
     } finally {
       setSaving(false);
     }
+  };
+
+  const performUpsert = async (userId: string) => {
+    const payload = {
+      id: userId,
+      birth_date: formData.birthDate,
+      birth_time: formData.birthTime,
+      birth_place: formData.birthPlace,
+      latitude: formData.latitude ? parseFloat(formData.latitude) : 0,
+      longitude: formData.longitude ? parseFloat(formData.longitude) : 0,
+      updated_at: new Date().toISOString(),
+    };
+    console.log("[DEBUG] Upserting payload:", payload);
+    const { error } = await supabase.from('users_origin').upsert(payload);
+    if (error) {
+      console.error("[DEBUG] Supabase upsert error:", error);
+      return;
+    }
+    console.log("[DEBUG] Upsert successful!");
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
   };
 
   return (

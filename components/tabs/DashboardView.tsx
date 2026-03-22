@@ -3,15 +3,15 @@
 import React from 'react';
 
 const mockSoulData = {
-  avatar: { title: 'THE WINTER FLAME', subtitle: '熔炉之火' },
+  avatar: { title: 'THE WINTER FLAME', subtitle: 'Furnace Fire' },
   elements: { metal: 20, wood: 60, water: 10, fire: 90, earth: 30 },
-  coreDrive: 'PIONEER (开拓者)',
-  interface: 'STANDALONE (独立节点)',
+  coreDrive: 'PIONEER',
+  interface: 'STANDALONE',
   resonance: { sync: 'Neon Cyan', collision: 'Earth Tones' },
 };
 
 const AXES = ['fire', 'earth', 'metal', 'water', 'wood'] as const;
-const AXIS_LABELS = { fire: '火', earth: '土', metal: '金', water: '水', wood: '木' };
+const AXIS_LABELS = { fire: 'FIRE', earth: 'EARTH', metal: 'METAL', water: 'WATER', wood: 'WOOD' };
 
 function polarToXY(cx: number, cy: number, r: number, angleIndex: number) {
   const angle = (Math.PI * 2 * angleIndex) / 5 - Math.PI / 2;
@@ -190,7 +190,7 @@ function RadarChart() {
             textAnchor="middle"
             dominantBaseline="central"
             fill="rgba(201,169,110,0.45)"
-            fontSize="8"
+            fontSize="7"
             fontFamily="'Space Mono', monospace"
           >
             {AXIS_LABELS[axis]}
@@ -232,108 +232,120 @@ function ProtocolCard({
 export default function DashboardView() {
   return (
     <div
-      className="tab-content flex flex-col h-[calc(100vh-80px)] px-4 pt-6 pb-2 overflow-hidden"
+      className="tab-content flex flex-col h-[calc(100vh-80px)] justify-between py-8 px-4"
       style={{ background: 'var(--obsidian)' }}
     >
-      <div className="flex items-center gap-2 mb-1">
-        <div className="w-1.5 h-1.5 rounded-full bg-[rgba(201,169,110,0.6)] animate-pulse-gold" />
-        <span
-          className="text-[8px] tracking-[0.4em] uppercase"
-          style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
-        >
-          SOUL.ARCHIVE — ACTIVE
-        </span>
-      </div>
-
-      <div className="w-full h-px mb-4" style={{ background: 'rgba(201,169,110,0.1)' }} />
-
-      <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
-        <div className="flex flex-col items-center justify-center text-center">
-          <SoulSigil />
-
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-[rgba(201,169,110,0.6)] animate-pulse-gold" />
           <span
-            className="text-[8px] tracking-[0.4em] uppercase mt-4 mb-3"
+            className="text-sm tracking-[0.2em] uppercase"
             style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
           >
-            DESIGNATION
+            SOUL.ARCHIVE — ACTIVE
           </span>
-          <h2
-            className="text-[18px] font-semibold tracking-[0.12em] leading-tight gold-gradient-text"
-            style={{ fontFamily: "'Cinzel', serif" }}
-          >
-            {mockSoulData.avatar.title.split(' ').map((word, i) => (
-              <span key={i} className="block">{word}</span>
-            ))}
-          </h2>
-          <span
-            className="block text-[12px] mt-2 tracking-[0.2em]"
-            style={{ color: 'var(--text-secondary)', fontFamily: "'Rajdhani', sans-serif" }}
-          >
-            {mockSoulData.avatar.subtitle}
-          </span>
+        </div>
+        <div className="w-full h-px mt-2" style={{ background: 'rgba(201,169,110,0.1)' }} />
+      </div>
 
-          <div className="flex items-center gap-2 mt-4">
-            <div className="w-6 h-px" style={{ background: 'rgba(201,169,110,0.15)' }} />
-            <div className="w-1 h-1 rotate-45 border border-[rgba(201,169,110,0.25)]" />
-            <div className="w-6 h-px" style={{ background: 'rgba(201,169,110,0.15)' }} />
+      <div className="flex-1 flex flex-col justify-center">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col items-center justify-center text-center">
+            <h3
+              className="text-[10px] text-yellow-600/60 tracking-widest text-center mb-6 uppercase"
+              style={{ fontFamily: "'Space Mono', monospace" }}
+            >
+              Core Identity
+            </h3>
+
+            <SoulSigil />
+
+            <span
+              className="text-[8px] tracking-[0.4em] uppercase mt-4 mb-3"
+              style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
+            >
+              DESIGNATION
+            </span>
+            <h2
+              className="text-[18px] font-semibold tracking-[0.12em] leading-tight gold-gradient-text"
+              style={{ fontFamily: "'Cinzel', serif" }}
+            >
+              {mockSoulData.avatar.title.split(' ').map((word, i) => (
+                <span key={i} className="block">{word}</span>
+              ))}
+            </h2>
+            <span
+              className="block text-[12px] mt-2 tracking-[0.2em]"
+              style={{ color: 'var(--text-secondary)', fontFamily: "'Rajdhani', sans-serif" }}
+            >
+              {mockSoulData.avatar.subtitle}
+            </span>
+
+            <div className="flex items-center gap-2 mt-4">
+              <div className="w-6 h-px" style={{ background: 'rgba(201,169,110,0.15)' }} />
+              <div className="w-1 h-1 rotate-45 border border-[rgba(201,169,110,0.25)]" />
+              <div className="w-6 h-px" style={{ background: 'rgba(201,169,110,0.15)' }} />
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center justify-center">
+            <h3
+              className="text-[10px] text-yellow-600/60 tracking-widest text-center mb-6 uppercase"
+              style={{ fontFamily: "'Space Mono', monospace" }}
+            >
+              Elemental Matrix
+            </h3>
+            <RadarChart />
           </div>
         </div>
+      </div>
 
-        <div className="flex items-center justify-center">
-          <RadarChart />
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-px" style={{ background: 'rgba(201,169,110,0.15)' }} />
+          <span
+            className="text-[8px] tracking-[0.4em] uppercase"
+            style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
+          >
+            THE PROTOCOLS
+          </span>
+          <div className="flex-1 h-px" style={{ background: 'rgba(201,169,110,0.08)' }} />
         </div>
-      </div>
 
-      <div className="w-full h-px my-3" style={{ background: 'rgba(201,169,110,0.08)' }} />
+        <div className="flex flex-col gap-4">
+          <ProtocolCard label="SYS.PERMISSION">
+            <span
+              className="text-[11px] tracking-[0.08em] leading-snug"
+              style={{ color: 'var(--gold)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 500 }}
+            >
+              {mockSoulData.coreDrive}
+            </span>
+          </ProtocolCard>
 
-      <div className="flex items-center gap-2 mb-2">
-        <div className="w-8 h-px" style={{ background: 'rgba(201,169,110,0.15)' }} />
-        <span
-          className="text-[8px] tracking-[0.4em] uppercase"
-          style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
-        >
-          THE PROTOCOLS
-        </span>
-        <div className="flex-1 h-px" style={{ background: 'rgba(201,169,110,0.08)' }} />
-      </div>
+          <ProtocolCard label="INTERFACE">
+            <span
+              className="text-[11px] tracking-[0.08em] leading-snug"
+              style={{ color: 'var(--gold)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 500 }}
+            >
+              {mockSoulData.interface}
+            </span>
+          </ProtocolCard>
 
-      <div className="flex flex-col gap-2">
-        <ProtocolCard label="SYS.PERMISSION">
-          <span
-            className="text-[11px] tracking-[0.08em] leading-snug"
-            style={{ color: 'var(--gold)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 500 }}
-          >
-            {mockSoulData.coreDrive}
-          </span>
-        </ProtocolCard>
-
-        <ProtocolCard label="INTERFACE">
-          <span
-            className="text-[11px] tracking-[0.08em] leading-snug"
-            style={{ color: 'var(--gold)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 500 }}
-          >
-            {mockSoulData.interface}
-          </span>
-        </ProtocolCard>
-
-        <ProtocolCard label="RESONANCE">
-          <span
-            className="block text-[10px] tracking-[0.05em] leading-relaxed"
-            style={{ color: 'var(--gold)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 500 }}
-          >
-            + {mockSoulData.resonance.sync}
-          </span>
-          <span
-            className="block text-[10px] tracking-[0.05em] leading-relaxed"
-            style={{ color: 'var(--text-secondary)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 500 }}
-          >
-            - {mockSoulData.resonance.collision}
-          </span>
-        </ProtocolCard>
-      </div>
-
-      <div className="flex justify-center mt-3">
-        <div className="w-px h-4 bg-gradient-to-b from-[rgba(201,169,110,0.12)] to-transparent" />
+          <ProtocolCard label="RESONANCE">
+            <span
+              className="block text-[10px] tracking-[0.05em] leading-relaxed"
+              style={{ color: 'var(--gold)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 500 }}
+            >
+              + {mockSoulData.resonance.sync}
+            </span>
+            <span
+              className="block text-[10px] tracking-[0.05em] leading-relaxed"
+              style={{ color: 'var(--text-secondary)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 500 }}
+            >
+              - {mockSoulData.resonance.collision}
+            </span>
+          </ProtocolCard>
+        </div>
       </div>
     </div>
   );

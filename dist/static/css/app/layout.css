@@ -1453,6 +1453,10 @@ video {
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
 }
+.py-8 {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
 .pb-20 {
   padding-bottom: 5rem;
 }
@@ -1691,6 +1695,9 @@ video {
 }
 .text-secondary-foreground {
   color: hsl(var(--secondary-foreground));
+}
+.text-yellow-600\/60 {
+  color: rgb(202 138 4 / 0.6);
 }
 .underline-offset-4 {
   text-underline-offset: 4px;

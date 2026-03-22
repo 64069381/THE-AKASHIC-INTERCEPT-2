@@ -14,8 +14,8 @@ const mockSoulData = {
     desc: 'Energy exhibits high-intensity internal circulation. Emotional ports are heavily encrypted against external signal hijacking. Displays absolute rationality in close relations.',
   },
   resonance: {
-    sync: ['Neon Cyan', 'Obsidian Black', 'Titanium'],
-    collision: ['Earth Tones', 'Dull Yellow'],
+    sync: ['Neon Cyan', 'Obsidian Black', 'Titanium', 'Aetheric Pulse', 'Chaos Logic', 'Cold Fire'],
+    collision: ['Earth Tones', 'Dull Yellow', 'Stagnant Water', 'Rigid Order', 'Decay', 'Grounding'],
   },
 };
 
@@ -104,7 +104,7 @@ const ELEMENT_ICONS = [FireIcon, EarthIcon, MetalIcon, WaterIcon, WoodIcon];
 
 function SoulSigil() {
   return (
-    <svg width="48" height="48" viewBox="0 0 48 48" style={{ overflow: 'visible' }}>
+    <svg width="64" height="64" viewBox="0 0 48 48" style={{ overflow: 'visible' }}>
       <polygon
         points="24,4 44,24 24,44 4,24"
         fill="none"
@@ -126,11 +126,11 @@ function SoulSigil() {
 }
 
 function RadarChart() {
-  const size = 200;
+  const size = 180;
   const cx = size / 2;
   const cy = size / 2;
-  const maxR = 52;
-  const iconR = maxR + 22;
+  const maxR = 48;
+  const iconR = maxR + 20;
 
   const dataPoints = AXES.map((axis, i) => {
     const val = mockSoulData.elements[axis] / 100;
@@ -210,196 +210,146 @@ function RadarChart() {
   );
 }
 
-function ProtocolCard({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+const bentoCardClass = 'relative p-5 rounded-sm';
+const bentoBorder = '0.5px solid rgba(201,169,110,0.2)';
+const monoFont = "'Space Mono', monospace";
+const serifFont = "'Cinzel', serif";
+const sansFont = "'Rajdhani', sans-serif";
+
+function BentoCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className="p-3 relative"
-      style={{ border: '1px solid rgba(201,169,110,0.12)' }}
+      className={`${bentoCardClass} ${className}`}
+      style={{ border: bentoBorder, background: 'rgba(255,255,255,0.02)' }}
     >
-      <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[rgba(201,169,110,0.3)]" />
-      <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[rgba(201,169,110,0.3)]" />
-      <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[rgba(201,169,110,0.3)]" />
-      <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[rgba(201,169,110,0.3)]" />
-
-      <span
-        className="block text-[8px] tracking-[0.3em] uppercase mb-1.5"
-        style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
-      >
-        {label}
-      </span>
       {children}
     </div>
   );
 }
 
+function SectionLabel({ text }: { text: string }) {
+  return (
+    <span
+      className="block text-[9px] tracking-[0.3em] uppercase mb-4"
+      style={{ color: 'rgba(201,169,110,0.5)', fontFamily: monoFont }}
+    >
+      {text}
+    </span>
+  );
+}
+
 export default function DashboardView() {
   return (
-    <div
-      className="tab-content flex flex-col py-8 px-4"
-      style={{ background: 'var(--obsidian)' }}
-    >
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-[rgba(201,169,110,0.6)] animate-pulse-gold" />
-          <span
-            className="text-sm tracking-[0.2em] uppercase"
-            style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
-          >
-            SOUL.ARCHIVE — ACTIVE
-          </span>
-        </div>
-        <div className="w-full h-px mt-2" style={{ background: 'rgba(201,169,110,0.1)' }} />
-      </div>
-
-      <div className="flex flex-col items-center w-full text-center mt-8">
-        <h3
-          className="text-[10px] text-yellow-600/60 tracking-widest text-center mb-6 uppercase"
-          style={{ fontFamily: "'Space Mono', monospace" }}
-        >
-          Core Identity
-        </h3>
-
-        <SoulSigil />
-
+    <div className="tab-content flex flex-col gap-4 w-full px-4 pt-6 pb-20 overflow-y-auto bg-black">
+      <div className="flex items-center justify-center gap-2 mb-2">
         <span
-          className="text-[8px] tracking-[0.4em] uppercase mt-4 mb-3"
-          style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
+          className="text-[11px] tracking-[0.25em] uppercase"
+          style={{ color: 'rgba(201,169,110,0.5)', fontFamily: monoFont }}
         >
-          DESIGNATION
+          SOUL ARCHIVE — ACTIVE
         </span>
-        <h2
-          className="text-[18px] font-semibold tracking-[0.12em] leading-tight gold-gradient-text"
-          style={{ fontFamily: "'Cinzel', serif" }}
-        >
-          {mockSoulData.avatar.title.split(' ').map((word, i) => (
-            <span key={i} className="block">{word}</span>
-          ))}
-        </h2>
-        <span
-          className="block text-[12px] mt-2 tracking-[0.2em]"
-          style={{ color: 'var(--text-secondary)', fontFamily: "'Rajdhani', sans-serif" }}
-        >
-          {mockSoulData.avatar.subtitle}
-        </span>
-
-        <div className="flex items-center gap-2 mt-4">
-          <div className="w-6 h-px" style={{ background: 'rgba(201,169,110,0.15)' }} />
-          <div className="w-1 h-1 rotate-45 border border-[rgba(201,169,110,0.25)]" />
-          <div className="w-6 h-px" style={{ background: 'rgba(201,169,110,0.15)' }} />
-        </div>
       </div>
 
-      <div className="flex flex-col items-center w-full text-center mt-16 mb-8">
-        <h3
-          className="text-[10px] text-yellow-600/60 tracking-widest text-center mb-6 uppercase"
-          style={{ fontFamily: "'Space Mono', monospace" }}
-        >
-          Elemental Matrix
-        </h3>
-        <RadarChart />
-      </div>
-
-      <div className="w-full">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-px" style={{ background: 'rgba(201,169,110,0.15)' }} />
-          <span
-            className="text-[8px] tracking-[0.4em] uppercase"
-            style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
+      <div className="grid grid-cols-2 gap-4">
+        <BentoCard className="flex flex-col items-center justify-center text-center min-h-[280px]">
+          <SectionLabel text="Core Identity" />
+          <div className="mb-4">
+            <SoulSigil />
+          </div>
+          <h2
+            className="text-[20px] font-semibold tracking-[0.08em] leading-tight gold-gradient-text"
+            style={{ fontFamily: serifFont }}
           >
-            THE PROTOCOLS
+            {mockSoulData.avatar.title.split(' ').map((word, i) => (
+              <span key={i} className="block">{word}</span>
+            ))}
+          </h2>
+          <span
+            className="block text-[8px] mt-3 tracking-[0.3em] uppercase"
+            style={{ color: 'rgba(201,169,110,0.4)', fontFamily: monoFont }}
+          >
+            PRIMARY ARCHETYPE ACCESSED
           </span>
-          <div className="flex-1 h-px" style={{ background: 'rgba(201,169,110,0.08)' }} />
-        </div>
+        </BentoCard>
 
-        <div className="flex flex-col w-full gap-6">
-          <ProtocolCard label="SYS.PERMISSION">
-            <span
-              className="block text-[13px] tracking-[0.1em] uppercase mb-1.5"
-              style={{ color: 'var(--gold)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 600 }}
-            >
-              {mockSoulData.permission.name}
-            </span>
-            <span
-              className="block text-[10px] leading-relaxed tracking-wide"
-              style={{ color: 'rgba(255,255,255,0.45)', fontFamily: "'Space Mono', monospace" }}
-            >
-              {mockSoulData.permission.desc}
-            </span>
-          </ProtocolCard>
-
-          <ProtocolCard label="INTERFACE">
-            <span
-              className="block text-[13px] tracking-[0.1em] uppercase mb-1.5"
-              style={{ color: 'var(--gold)', fontFamily: "'Rajdhani', sans-serif", fontWeight: 600 }}
-            >
-              {mockSoulData.interface.name}
-            </span>
-            <span
-              className="block text-[10px] leading-relaxed tracking-wide"
-              style={{ color: 'rgba(255,255,255,0.45)', fontFamily: "'Space Mono', monospace" }}
-            >
-              {mockSoulData.interface.desc}
-            </span>
-          </ProtocolCard>
-
-          <ProtocolCard label="RESONANCE">
-            <div className="mb-2">
-              <span
-                className="text-[9px] tracking-[0.15em] uppercase mr-2"
-                style={{ color: 'var(--gold)', fontFamily: "'Space Mono', monospace" }}
-              >
-                [+] SYNC:
-              </span>
-              <div className="flex flex-wrap gap-1.5 mt-1.5">
-                {mockSoulData.resonance.sync.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-[9px] tracking-wide px-2 py-0.5"
-                    style={{
-                      color: 'var(--gold)',
-                      border: '1px solid rgba(201,169,110,0.25)',
-                      fontFamily: "'Rajdhani', sans-serif",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div>
-              <span
-                className="text-[9px] tracking-[0.15em] uppercase mr-2"
-                style={{ color: 'rgba(180,100,80,0.7)', fontFamily: "'Space Mono', monospace" }}
-              >
-                [-] COLLISION:
-              </span>
-              <div className="flex flex-wrap gap-1.5 mt-1.5">
-                {mockSoulData.resonance.collision.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-[9px] tracking-wide px-2 py-0.5"
-                    style={{
-                      color: 'rgba(180,100,80,0.7)',
-                      border: '1px solid rgba(180,100,80,0.2)',
-                      fontFamily: "'Rajdhani', sans-serif",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </ProtocolCard>
-        </div>
+        <BentoCard className="flex flex-col items-center justify-center min-h-[280px]">
+          <SectionLabel text="Elemental Matrix" />
+          <RadarChart />
+        </BentoCard>
       </div>
+
+      <BentoCard>
+        <h3
+          className="text-[15px] tracking-[0.08em] uppercase mb-4"
+          style={{ color: 'rgba(201,169,110,0.7)', fontFamily: sansFont, fontWeight: 600 }}
+        >
+          SYS. PERMISSION // INTERFACE
+        </h3>
+        <div className="rounded-sm p-4" style={{ background: 'rgba(255,255,255,0.03)' }}>
+          <p
+            className="text-[11px] leading-relaxed tracking-wide mb-4"
+            style={{ color: 'rgba(255,255,255,0.5)', fontFamily: monoFont }}
+          >
+            {mockSoulData.permission.desc}
+          </p>
+          <div className="w-full h-px mb-4" style={{ background: 'rgba(201,169,110,0.08)' }} />
+          <p
+            className="text-[11px] leading-relaxed tracking-wide"
+            style={{ color: 'rgba(255,255,255,0.5)', fontFamily: monoFont }}
+          >
+            {mockSoulData.interface.desc}
+          </p>
+        </div>
+      </BentoCard>
+
+      <BentoCard>
+        <h3
+          className="text-[15px] tracking-[0.08em] uppercase mb-5"
+          style={{ color: 'rgba(201,169,110,0.7)', fontFamily: sansFont, fontWeight: 600 }}
+        >
+          RESONANCE
+        </h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <span
+              className="block text-[10px] tracking-[0.2em] uppercase mb-3"
+              style={{ color: 'rgba(6,182,212,0.8)', fontFamily: monoFont }}
+            >
+              [+] SYNC
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {mockSoulData.resonance.sync.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs px-3 py-1 rounded-sm border border-cyan-500/30 text-cyan-400 bg-cyan-500/10"
+                  style={{ fontFamily: sansFont, fontWeight: 500 }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div>
+            <span
+              className="block text-[10px] tracking-[0.2em] uppercase mb-3"
+              style={{ color: 'rgba(180,100,80,0.8)', fontFamily: monoFont }}
+            >
+              [-] COLLISION
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {mockSoulData.resonance.collision.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs px-3 py-1 rounded-sm border border-red-900/50 text-red-500 bg-red-900/10"
+                  style={{ fontFamily: sansFont, fontWeight: 500 }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </BentoCard>
     </div>
   );
 }

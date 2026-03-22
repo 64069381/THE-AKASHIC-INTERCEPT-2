@@ -2,8 +2,11 @@
 
 import React, { useState } from 'react';
 import { MetatronsCube, MoonPhases, BackgroundWatermark } from '../svg/SacredGeometry';
+import { useAppStore } from '@/lib/store';
+import DashboardView from './DashboardView';
 
 export default function HomeTab() {
+  const baziData = useAppStore((s) => s.baziData);
   const [initiated, setInitiated] = useState(false);
   const [animating, setAnimating] = useState(false);
 
@@ -14,6 +17,10 @@ export default function HomeTab() {
       setAnimating(false);
     }, 2000);
   };
+
+  if (baziData) {
+    return <DashboardView />;
+  }
 
   return (
     <div className="tab-content relative flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-6 overflow-hidden">

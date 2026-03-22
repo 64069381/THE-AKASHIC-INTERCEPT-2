@@ -97,43 +97,48 @@ export default function OriginTab() {
   };
 
   const performUpsert = async (userId: string) => {
+    const lat = formData.latitude ? parseFloat(formData.latitude) : NaN;
+    const lon = formData.longitude ? parseFloat(formData.longitude) : NaN;
+
+    const timeResult = calculateAccurateUTC(formData.birthDate, formData.birthTime, lat, lon);
+    if (timeResult) {
+      console.log('[TIME ENGINE]:', timeResult);
+    } else {
+      console.warn('[TIME ENGINE]: Insufficient data for UTC calculation');
+    }
+
+    const baziResult = timeResult ? calculateBazi(timeResult.utcISO, lon) : null;
+    if (baziResult) {
+      console.log('[BAZI MATRIX]:', baziResult);
+    } else if (timeResult) {
+      console.warn('[BAZI MATRIX]: Insufficient data for Bazi calculation');
+    }
+
     const payload = {
       id: userId,
       birth_date: formData.birthDate || null,
       birth_time: formData.birthTime || null,
       city: formData.birthPlace || null,
       country: null as string | null,
-      latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-      longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+      latitude: !isNaN(lat) ? lat : null,
+      longitude: !isNaN(lon) ? lon : null,
+      true_solar_time: timeResult?.utcISO ?? null,
+      bazi_year: baziResult ? JSON.stringify(baziResult.year) : null,
+      bazi_month: baziResult ? JSON.stringify(baziResult.month) : null,
+      bazi_day: baziResult ? JSON.stringify(baziResult.day) : null,
+      bazi_hour: baziResult ? JSON.stringify(baziResult.hour) : null,
       updated_at: new Date().toISOString(),
     };
+
     console.log("[DEBUG] Upserting payload:", payload);
-    try {
-      const { error } = await supabase.from('users_origin').upsert(payload);
-      if (error) {
-        console.error("[DEBUG] Supabase upsert error:", error);
-        return;
-      }
-      console.log("[DEBUG] Upsert successful!");
-      const lat = formData.latitude ? parseFloat(formData.latitude) : NaN;
-      const lon = formData.longitude ? parseFloat(formData.longitude) : NaN;
-      const timeResult = calculateAccurateUTC(formData.birthDate, formData.birthTime, lat, lon);
-      if (timeResult) {
-        console.log('[TIME ENGINE]:', timeResult);
-        const baziResult = calculateBazi(timeResult.utcISO, lon);
-        if (baziResult) {
-          console.log('[BAZI MATRIX]:', baziResult);
-        } else {
-          console.warn('[BAZI MATRIX]: Insufficient data for Bazi calculation');
-        }
-      } else {
-        console.warn('[TIME ENGINE]: Insufficient data for UTC calculation');
-      }
-      setSaved(true);
-      setTimeout(() => setSaved(false), 1500);
-    } catch (error) {
-      console.error("[DEBUG] Supabase write failed:", error);
+    const { error } = await supabase.from('users_origin').upsert(payload);
+    if (error) {
+      console.error("[DEBUG] Supabase upsert error:", error);
+      return;
     }
+    console.log('[DATA SECURED]: All core destiny data persisted');
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
   };
 
   return (

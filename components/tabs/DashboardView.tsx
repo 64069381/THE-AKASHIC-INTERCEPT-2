@@ -241,7 +241,7 @@ function ProtocolCard({
 export default function DashboardView() {
   return (
     <div
-      className="tab-content flex flex-col h-[calc(100vh-80px)] justify-between py-8 px-4"
+      className="tab-content flex flex-col py-8 px-4"
       style={{ background: 'var(--obsidian)' }}
     >
       <div>
@@ -257,59 +257,55 @@ export default function DashboardView() {
         <div className="w-full h-px mt-2" style={{ background: 'rgba(201,169,110,0.1)' }} />
       </div>
 
-      <div className="flex-1 flex flex-col justify-center">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col items-center justify-center text-center">
-            <h3
-              className="text-[10px] text-yellow-600/60 tracking-widest text-center mb-6 uppercase"
-              style={{ fontFamily: "'Space Mono', monospace" }}
-            >
-              Core Identity
-            </h3>
+      <div className="flex flex-col items-center w-full text-center mt-8">
+        <h3
+          className="text-[10px] text-yellow-600/60 tracking-widest text-center mb-6 uppercase"
+          style={{ fontFamily: "'Space Mono', monospace" }}
+        >
+          Core Identity
+        </h3>
 
-            <SoulSigil />
+        <SoulSigil />
 
-            <span
-              className="text-[8px] tracking-[0.4em] uppercase mt-4 mb-3"
-              style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
-            >
-              DESIGNATION
-            </span>
-            <h2
-              className="text-[18px] font-semibold tracking-[0.12em] leading-tight gold-gradient-text"
-              style={{ fontFamily: "'Cinzel', serif" }}
-            >
-              {mockSoulData.avatar.title.split(' ').map((word, i) => (
-                <span key={i} className="block">{word}</span>
-              ))}
-            </h2>
-            <span
-              className="block text-[12px] mt-2 tracking-[0.2em]"
-              style={{ color: 'var(--text-secondary)', fontFamily: "'Rajdhani', sans-serif" }}
-            >
-              {mockSoulData.avatar.subtitle}
-            </span>
+        <span
+          className="text-[8px] tracking-[0.4em] uppercase mt-4 mb-3"
+          style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
+        >
+          DESIGNATION
+        </span>
+        <h2
+          className="text-[18px] font-semibold tracking-[0.12em] leading-tight gold-gradient-text"
+          style={{ fontFamily: "'Cinzel', serif" }}
+        >
+          {mockSoulData.avatar.title.split(' ').map((word, i) => (
+            <span key={i} className="block">{word}</span>
+          ))}
+        </h2>
+        <span
+          className="block text-[12px] mt-2 tracking-[0.2em]"
+          style={{ color: 'var(--text-secondary)', fontFamily: "'Rajdhani', sans-serif" }}
+        >
+          {mockSoulData.avatar.subtitle}
+        </span>
 
-            <div className="flex items-center gap-2 mt-4">
-              <div className="w-6 h-px" style={{ background: 'rgba(201,169,110,0.15)' }} />
-              <div className="w-1 h-1 rotate-45 border border-[rgba(201,169,110,0.25)]" />
-              <div className="w-6 h-px" style={{ background: 'rgba(201,169,110,0.15)' }} />
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center justify-center">
-            <h3
-              className="text-[10px] text-yellow-600/60 tracking-widest text-center mb-6 uppercase"
-              style={{ fontFamily: "'Space Mono', monospace" }}
-            >
-              Elemental Matrix
-            </h3>
-            <RadarChart />
-          </div>
+        <div className="flex items-center gap-2 mt-4">
+          <div className="w-6 h-px" style={{ background: 'rgba(201,169,110,0.15)' }} />
+          <div className="w-1 h-1 rotate-45 border border-[rgba(201,169,110,0.25)]" />
+          <div className="w-6 h-px" style={{ background: 'rgba(201,169,110,0.15)' }} />
         </div>
       </div>
 
-      <div>
+      <div className="flex flex-col items-center w-full text-center mt-16 mb-8">
+        <h3
+          className="text-[10px] text-yellow-600/60 tracking-widest text-center mb-6 uppercase"
+          style={{ fontFamily: "'Space Mono', monospace" }}
+        >
+          Elemental Matrix
+        </h3>
+        <RadarChart />
+      </div>
+
+      <div className="w-full">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-px" style={{ background: 'rgba(201,169,110,0.15)' }} />
           <span
@@ -321,7 +317,7 @@ export default function DashboardView() {
           <div className="flex-1 h-px" style={{ background: 'rgba(201,169,110,0.08)' }} />
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col w-full gap-6">
           <ProtocolCard label="SYS.PERMISSION">
             <span
               className="block text-[13px] tracking-[0.1em] uppercase mb-1.5"

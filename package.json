@@ -70,7 +70,8 @@
     "typescript": "5.2.2",
     "tz-lookup": "^6.1.25",
     "vaul": "^0.9.9",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@types/luxon": "^3.7.1"

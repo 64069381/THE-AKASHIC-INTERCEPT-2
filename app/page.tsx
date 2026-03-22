@@ -20,21 +20,6 @@ export default function Home() {
     })();
   }, []);
 
-  const renderTab = () => {
-    switch (activeTab) {
-      case 'home':
-        return <HomeTab />;
-      case 'origin':
-        return <OriginTab />;
-      case 'protocol':
-        return <ProtocolTab />;
-      case 'oracle':
-        return <OracleTab />;
-      default:
-        return <HomeTab />;
-    }
-  };
-
   return (
     <main
       className="relative min-h-screen"
@@ -44,7 +29,6 @@ export default function Home() {
         margin: '0 auto',
       }}
     >
-      {/* Subtle side borders for desktop viewing */}
       <div
         className="hidden sm:block fixed top-0 bottom-0 left-[calc(50%-240px)] w-px"
         style={{ background: 'rgba(201,169,110,0.04)' }}
@@ -54,12 +38,21 @@ export default function Home() {
         style={{ background: 'rgba(201,169,110,0.04)' }}
       />
 
-      {/* Page content */}
       <div className="pb-20">
-        {renderTab()}
+        <div style={{ display: activeTab === 'home' ? 'block' : 'none' }}>
+          <HomeTab />
+        </div>
+        <div style={{ display: activeTab === 'origin' ? 'block' : 'none' }}>
+          <OriginTab />
+        </div>
+        <div style={{ display: activeTab === 'protocol' ? 'block' : 'none' }}>
+          <ProtocolTab />
+        </div>
+        <div style={{ display: activeTab === 'oracle' ? 'block' : 'none' }}>
+          <OracleTab />
+        </div>
       </div>
 
-      {/* Bottom Navigation */}
       <div style={{ maxWidth: '480px', margin: '0 auto' }}>
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       </div>

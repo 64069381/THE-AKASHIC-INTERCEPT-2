@@ -5,8 +5,10 @@ import { HexagramSigil, BackgroundWatermark } from '../svg/SacredGeometry';
 import supabase from '@/lib/supabase';
 import { calculateAccurateUTC } from '@/lib/time-engine';
 import { calculateBazi } from '@/lib/bazi-engine';
+import { useAppStore } from '@/lib/store';
 
 export default function OriginTab() {
+  const { setLocationData, setBaziData, setTrueSolarTime } = useAppStore();
   const [formData, setFormData] = useState({
     birthDate: '',
     birthTime: '',
@@ -139,6 +141,21 @@ export default function OriginTab() {
       return;
     }
     console.log('[DATA SECURED]: All core destiny data persisted');
+
+    setLocationData({
+      latitude: formData.latitude,
+      longitude: formData.longitude,
+      city: formData.birthPlace,
+      matchedAddress: matchedLocation,
+    });
+    setBaziData({
+      yearPillar: baziResult?.year.ganZhi ?? null,
+      monthPillar: baziResult?.month.ganZhi ?? null,
+      dayPillar: baziResult?.day.ganZhi ?? null,
+      hourPillar: baziResult?.hour.ganZhi ?? null,
+    });
+    setTrueSolarTime(timeResult?.utcISO ?? null);
+
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
   };

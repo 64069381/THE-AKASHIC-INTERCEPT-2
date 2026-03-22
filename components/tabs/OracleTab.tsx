@@ -3,35 +3,21 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { AllSeeingEye } from '../svg/SacredGeometry';
 import supabase from '@/lib/supabase';
-
-interface Message {
-  id: string;
-  role: 'user' | 'oracle';
-  content: string;
-  timestamp: Date;
-}
-
-interface OriginData {
-  city: string | null;
-  country: string | null;
-  bazi_year: string | null;
-  bazi_month: string | null;
-  bazi_day: string | null;
-  bazi_hour: string | null;
-}
+import { useAppStore } from '@/lib/store';
 
 export default function OracleTab() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '0',
-      role: 'oracle',
-      content: 'The channel is open. Speak your inquiry, and the pattern shall be revealed.',
-      timestamp: new Date(),
-    },
-  ]);
+  const {
+    oracleMessages,
+    addOracleMessage,
+    resetOracleMessages,
+    baziData: storeBazi,
+    locationData: storeLocation,
+    setBaziData,
+    setLocationData,
+  } = useAppStore();
+
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [originData, setOriginData] = useState<OriginData | null>(null);
   const [originLoaded, setOriginLoaded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,9 +28,14 @@ export default function OracleTab() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [oracleMessages]);
 
   useEffect(() => {
+    if (storeBazi) {
+      setOriginLoaded(true);
+      return;
+    }
+
     (async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -60,7 +51,18 @@ export default function OracleTab() {
           .maybeSingle();
 
         if (data) {
-          setOriginData(data);
+          setBaziData({
+            yearPillar: data.bazi_year,
+            monthPillar: data.bazi_month,
+            dayPillar: data.bazi_day,
+            hourPillar: data.bazi_hour,
+          });
+          setLocationData({
+            latitude: '',
+            longitude: '',
+            city: data.city || '',
+            matchedAddress: '',
+          });
         }
       } catch (err) {
         console.warn('[OracleTab] Failed to load origin data:', err);
@@ -68,39 +70,36 @@ export default function OracleTab() {
         setOriginLoaded(true);
       }
     })();
-  }, []);
+  }, [storeBazi, setBaziData, setLocationData]);
 
   const handleSend = useCallback(async () => {
     if (!input.trim() || isTyping) return;
 
     const userQuery = input.trim();
-    const userMessage: Message = {
+    addOracleMessage({
       id: Date.now().toString(),
       role: 'user',
       content: userQuery,
-      timestamp: new Date(),
-    };
+      timestamp: Date.now(),
+    });
 
-    setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsTyping(true);
 
     try {
-      const baziData = {
-        yearPillar: originData?.bazi_year || undefined,
-        monthPillar: originData?.bazi_month || undefined,
-        dayPillar: originData?.bazi_day || undefined,
-        hourPillar: originData?.bazi_hour || undefined,
+      const baziPayload = {
+        yearPillar: storeBazi?.yearPillar || undefined,
+        monthPillar: storeBazi?.monthPillar || undefined,
+        dayPillar: storeBazi?.dayPillar || undefined,
+        hourPillar: storeBazi?.hourPillar || undefined,
       };
 
-      const location = [originData?.city, originData?.country]
-        .filter(Boolean)
-        .join(', ');
+      const location = storeLocation?.city || '';
 
       const res = await fetch('/api/oracle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ baziData, location, userQuery }),
+        body: JSON.stringify({ baziData: baziPayload, location, userQuery }),
       });
 
       const data = await res.json();
@@ -109,36 +108,27 @@ export default function OracleTab() {
         throw new Error(data.error || '神谕通道异常');
       }
 
-      const oracleMessage: Message = {
+      addOracleMessage({
         id: (Date.now() + 1).toString(),
         role: 'oracle',
         content: data.result,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, oracleMessage]);
+        timestamp: Date.now(),
+      });
     } catch (err) {
       const errorText = err instanceof Error ? err.message : '未知错误';
-      const errorMessage: Message = {
+      addOracleMessage({
         id: (Date.now() + 1).toString(),
         role: 'oracle',
         content: `⚠ ${errorText}`,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+        timestamp: Date.now(),
+      });
     } finally {
       setIsTyping(false);
     }
-  }, [input, isTyping, originData]);
+  }, [input, isTyping, storeBazi, storeLocation, addOracleMessage]);
 
   const handleNewThread = () => {
-    setMessages([
-      {
-        id: Date.now().toString(),
-        role: 'oracle',
-        content: 'A new thread begins. The slate is cleared, but the pattern remembers. What do you seek?',
-        timestamp: new Date(),
-      },
-    ]);
+    resetOracleMessages();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -197,7 +187,7 @@ export default function OracleTab() {
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
-        {messages.map((message) => (
+        {oracleMessages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in-up`}
@@ -232,7 +222,7 @@ export default function OracleTab() {
                 className="block text-right mt-2 text-[9px] tracking-[0.1em]"
                 style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
               >
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
           </div>

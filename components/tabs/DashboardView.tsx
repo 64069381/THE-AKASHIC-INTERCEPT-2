@@ -93,12 +93,35 @@ function WoodIcon({ x, y }: { x: number; y: number }) {
 
 const ELEMENT_ICONS = [FireIcon, EarthIcon, MetalIcon, WaterIcon, WoodIcon];
 
+function SoulSigil() {
+  return (
+    <svg width="48" height="48" viewBox="0 0 48 48" style={{ overflow: 'visible' }}>
+      <polygon
+        points="24,4 44,24 24,44 4,24"
+        fill="none"
+        stroke="rgba(201,169,110,0.35)"
+        strokeWidth="0.75"
+      />
+      <polygon
+        points="24,10 38,24 24,38 10,24"
+        fill="none"
+        stroke="rgba(201,169,110,0.2)"
+        strokeWidth="0.5"
+      />
+      <line x1="24" y1="0" x2="24" y2="48" stroke="rgba(201,169,110,0.12)" strokeWidth="0.5" />
+      <line x1="0" y1="24" x2="48" y2="24" stroke="rgba(201,169,110,0.12)" strokeWidth="0.5" />
+      <circle cx="24" cy="24" r="2" fill="rgba(201,169,110,0.5)" />
+      <circle cx="24" cy="24" r="6" fill="none" stroke="rgba(201,169,110,0.18)" strokeWidth="0.5" />
+    </svg>
+  );
+}
+
 function RadarChart() {
-  const size = 180;
+  const size = 200;
   const cx = size / 2;
   const cy = size / 2;
-  const maxR = 70;
-  const iconR = maxR + 20;
+  const maxR = 52;
+  const iconR = maxR + 22;
 
   const dataPoints = AXES.map((axis, i) => {
     const val = mockSoulData.elements[axis] / 100;
@@ -107,7 +130,13 @@ function RadarChart() {
   const dataPolygon = dataPoints.map((p) => `${p.x},${p.y}`).join(' ');
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="block">
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className="block"
+      style={{ overflow: 'visible' }}
+    >
       {[0.25, 0.5, 0.75, 1].map((scale) => (
         <polygon
           key={scale}
@@ -220,8 +249,10 @@ export default function DashboardView() {
 
       <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
         <div className="flex flex-col items-center justify-center text-center">
+          <SoulSigil />
+
           <span
-            className="text-[8px] tracking-[0.4em] uppercase mb-3"
+            className="text-[8px] tracking-[0.4em] uppercase mt-4 mb-3"
             style={{ color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace" }}
           >
             DESIGNATION
@@ -266,7 +297,7 @@ export default function DashboardView() {
         <div className="flex-1 h-px" style={{ background: 'rgba(201,169,110,0.08)' }} />
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="flex flex-col gap-2">
         <ProtocolCard label="SYS.PERMISSION">
           <span
             className="text-[11px] tracking-[0.08em] leading-snug"

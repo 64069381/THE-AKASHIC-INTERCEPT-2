@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { HexagramSigil, BackgroundWatermark } from '../svg/SacredGeometry';
 import supabase from '@/lib/supabase';
 import { calculateAccurateUTC } from '@/lib/time-engine';
+import { calculateBazi } from '@/lib/bazi-engine';
 
 export default function OriginTab() {
   const [formData, setFormData] = useState({
@@ -119,6 +120,12 @@ export default function OriginTab() {
       const timeResult = calculateAccurateUTC(formData.birthDate, formData.birthTime, lat, lon);
       if (timeResult) {
         console.log('[TIME ENGINE]:', timeResult);
+        const baziResult = calculateBazi(timeResult.utcISO, lon);
+        if (baziResult) {
+          console.log('[BAZI MATRIX]:', baziResult);
+        } else {
+          console.warn('[BAZI MATRIX]: Insufficient data for Bazi calculation');
+        }
       } else {
         console.warn('[TIME ENGINE]: Insufficient data for UTC calculation');
       }
